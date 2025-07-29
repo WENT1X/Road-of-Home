@@ -1,6 +1,7 @@
 package npc;
 
 import player.Player;
+import nation.Nation;
 import buff.Buff;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,17 +9,18 @@ import java.util.Map;
 public class ActiveNPC extends NPC {
     private String dialogue;
     private boolean isMerchant;
-    private Map<String, Integer> itemsForSale; // Item name -> Price in Gold
+    private Nation nation;
+    private Map<String, Integer> itemsForSale; // Item name -> Price in nation's primary currency
     private Map<String, Buff> buffsForSale; // Buff type -> Buff
 
-    public ActiveNPC(String name, String dialogue, boolean isMerchant) {
+    public ActiveNPC(String name, String dialogue, boolean isMerchant, Nation nation) {
         super(name);
         this.dialogue = dialogue;
         this.isMerchant = isMerchant;
+        this.nation = nation;
         this.itemsForSale = new HashMap<>();
         this.buffsForSale = new HashMap<>();
         if (isMerchant) {
-            // Default items and buffs for merchants
             itemsForSale.put("Меч", 10);
             itemsForSale.put("Карта", 15);
             itemsForSale.put("Плащ", 12);
@@ -37,11 +39,15 @@ public class ActiveNPC extends NPC {
         return isMerchant;
     }
 
+    public Nation getNation() {
+        return nation;
+    }
+
     @Override
     public void interact() {
-        System.out.println(name + " говорит: " + dialogue);
+        System.out.println(name + " (" + nation.getName() + ") говорит: " + dialogue);
         if (isMerchant) {
-            System.out.println("Я продаю предметы и усиления!");
+            System.out.println("Я продаю предметы и усиления за " + nation.getCurrencies()[0] + "!");
         }
     }
 
@@ -50,13 +56,13 @@ public class ActiveNPC extends NPC {
             System.out.println(name + " не торгует.");
             return;
         }
-        System.out.println("Товары на продажу:");
+        System.out.println("Товары на продажу (цены в " + nation.getCurrencies()[0] + "):");
         int index = 1;
         for (Map.Entry<String, Integer> item : itemsForSale.entrySet()) {
-            System.out.println(index++ + ". " + item.getKey() + " (" + item.getValue() + " Золото)");
+            System.out.println(index++ + ". " + item.getKey() + " (" + item.getValue() + ")");
         }
         for (Map.Entry<String, Buff> buff : buffsForSale.entrySet()) {
-            System.out.println(index++ + ". " + buff.getKey() + " (+" + buff.getValue().getValue() + ", 15 Золото)");
+            System.out.println(index++ + ". " + buff.getKey() + " (+" + buff.getValue().getValue() + ", 15)");
         }
         System.out.println(index + ". Уйти.");
         System.out.print("Ваш выбор: ");
@@ -70,7 +76,7 @@ public class ActiveNPC extends NPC {
         int itemIndex = 1;
         for (Map.Entry<String, Integer> item : itemsForSale.entrySet()) {
             if (choice == itemIndex) {
-                if (player.spendCurrency("Gold", item.getValue())) {
+                if (player.spendCurrency(nation.getCurrencies()[0], item.getValue())) {
                     System.out.println("Вы купили " + item.getKey() + "!");
                     switch (item.getKey()) {
                         case "Меч":
@@ -87,7 +93,7 @@ public class ActiveNPC extends NPC {
                             break;
                     }
                 } else {
-                    System.out.println("Недостаточно золота!");
+                    System.out.println("Недостаточно " + nation.getCurrencies()[0] + "!");
                 }
                 return;
             }
@@ -96,11 +102,11 @@ public class ActiveNPC extends NPC {
 
         for (Map.Entry<String, Buff> buff : buffsForSale.entrySet()) {
             if (choice == itemIndex) {
-                if (player.spendCurrency("Gold", 15)) {
+                if (player.spendCurrency(nation.getCurrencies()[0], 15)) {
                     System.out.println("Вы купили усиление " + buff.getKey() + "!");
                     player.addBuff(buff.getValue());
                 } else {
-                    System.out.println("Недостаточно золота!");
+                    System.out.println("Недостаточно " + nation.getCurrencies()[0] + "!");
                 }
                 return;
             }

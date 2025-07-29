@@ -19,17 +19,17 @@ public class Player {
 
     public Player() {
         this.health = 100;
-        this.supplies = 5;
-        this.morale = 50;
+        this.supplies = 0;
+        this.morale = 0;
         this.hasSword = false;
         this.hasMap = false;
         this.hasCloak = false;
         this.hasAmulet = false;
         this.currencies = new ArrayList<>();
-        this.currencies.add(new Gold(10));
-        this.currencies.add(new Silver(20));
+        this.currencies.add(new Gold(0));
+        this.currencies.add(new Silver(0));
         this.currencies.add(new Gem(0));
-        this.currencies.add(new Herb(5));
+        this.currencies.add(new Herb(0));
         this.currencies.add(new Relic(0));
         this.buffs = new ArrayList<>();
     }

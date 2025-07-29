@@ -5,14 +5,19 @@ import player.Player;
 import utils.InputHandler;
 import utils.RandomEvent;
 import currency.*;
+import nation.Nation;
 
 public class ForestScene extends Scene {
+    private Nation nation;
+
     public ForestScene(Player player) {
         super(player);
+        this.nation = new Nation("Эльфийская Лига", new String[]{"Gold", "Herb"});
     }
 
     @Override
     public Scene play() {
+        System.out.println("\nВы находитесь в землях " + nation.getName() + ".");
         PassiveNPC bird = new PassiveNPC("Птица на ветке", new String[]{
                 "Чирп-чирп! Опасность близко!",
                 "Крылья лучше ног, путник!"
@@ -20,8 +25,9 @@ public class ForestScene extends Scene {
         bird.interact();
 
         if (RandomEvent.occurs(20)) {
-            System.out.println("Вы нашли немного серебра на тропе!");
-            player.addCurrency(new Silver(5));
+            System.out.println("Вы нашли немного " + nation.getCurrencies()[1] + " на тропе!");
+            player.addCurrency(new Herb(5));
+            player.printStatus();
         }
 
         System.out.println("\nВы идете по лесной тропе. Вдалеке слышен вой волков.");
@@ -45,11 +51,12 @@ public class ForestScene extends Scene {
 
                 int subChoice = InputHandler.getChoice(1, 2);
                 if (subChoice == 1) {
-                    System.out.println("Внутри вы находите немного еды, трав и странный амулет.");
+                    System.out.println("Внутри вы находите немного еды, " + nation.getCurrencies()[1] + " и странный амулет.");
                     player.setSupplies(player.getSupplies() + 2);
                     player.addCurrency(new Herb(3));
                     player.setAmulet(true);
-                    System.out.println("Ваши припасы: " + player.getSupplies() + ", Травы: " + player.getCurrencyAmount("Herb") + ", Амулет получен.");
+                    System.out.println("Ваши припасы: " + player.getSupplies() + ", " + nation.getCurrencies()[1] + ": " + player.getCurrencyAmount(nation.getCurrencies()[1]) + ", Амулет получен.");
+                    player.printStatus();
                 } else {
                     System.out.println("Вы решаете не рисковать и идете дальше.");
                 }
@@ -80,6 +87,11 @@ public class ForestScene extends Scene {
                 player.setHealth(player.getHealth() - (30 - damage));
                 player.setMorale(player.getMorale() - 10);
                 System.out.println("Здоровье: " + player.getHealth() + ", Мораль: " + player.getMorale());
+            }
+            if (RandomEvent.occurs(30)) {
+                System.out.println("Волки убегают, оставив немного " + nation.getCurrencies()[0] + "!");
+                player.addCurrency(new Gold(3));
+                player.printStatus();
             }
         } else {
             if (player.hasCloak()) {

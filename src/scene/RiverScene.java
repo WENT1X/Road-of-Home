@@ -5,22 +5,27 @@ import player.Player;
 import utils.InputHandler;
 import utils.RandomEvent;
 import currency.*;
+import nation.Nation;
 
 public class RiverScene extends Scene {
+    private Nation nation;
+
     public RiverScene(Player player) {
         super(player);
+        this.nation = new Nation("Морские Кланы", new String[]{"Silver", "Gem"});
     }
 
     @Override
     public Scene play() {
-        ActiveNPC fisherman = new ActiveNPC("Рыбак", "Река опасна, но я могу помочь, если ты поделишься припасами или золотом.", false);
-        ActiveNPC merchant = new ActiveNPC("Речной торговец", "У меня есть полезные вещи для путников!", true);
+        System.out.println("\nВы находитесь в землях " + nation.getName() + ".");
+        ActiveNPC fisherman = new ActiveNPC("Рыбак", "Река опасна, но я могу помочь, если ты поделишься припасами или " + nation.getCurrencies()[0] + ".", false, nation);
+        ActiveNPC merchant = new ActiveNPC("Речной торговец", "У меня есть полезные вещи для путников!", true, nation);
         System.out.println("\nВы подходите к бурной реке. Через нее перекинут старый мост, но он выглядит ненадежно.");
         fisherman.interact();
         merchant.interact();
         System.out.println("1. Рискнуть и перейти мост.");
         System.out.println("2. Искать брод.");
-        System.out.println("3. Дать рыбаку припасы или золото за помощь.");
+        System.out.println("3. Дать рыбаку припасы или " + nation.getCurrencies()[0] + " за помощь.");
         System.out.println("4. Торговать с речным торговцем.");
         if (player.hasAmulet()) {
             System.out.println("5. Использовать амулет.");
@@ -39,7 +44,7 @@ public class RiverScene extends Scene {
                 player.setMorale(player.getMorale() + 5);
                 System.out.println("Мораль: " + player.getMorale());
             } else {
-                System.out.println(" Мост ломается, и вы падаете в реку!");
+                System.out.println("Мост ломается, и вы падаете в реку!");
                 int damage = player.hasBuff("DefenseBoost") ? 15 : 25;
                 player.setHealth(player.getHealth() - damage);
                 System.out.println("Здоровье: " + player.getHealth());
@@ -47,7 +52,12 @@ public class RiverScene extends Scene {
                     gameOver("Река унесла вас.");
                     return null;
                 }
+                if (RandomEvent.occurs(20)) {
+                    System.out.println("Вы находите " + nation.getCurrencies()[1] + " в воде!");
+                    player.addCurrency(new Gem(2));
+                }
             }
+            player.printStatus();
         } else if (choice == 2) {
             System.out.println("Вы находите брод, но течение сильное.");
             if (player.hasCloak()) {
@@ -63,31 +73,36 @@ public class RiverScene extends Scene {
                     return null;
                 }
             }
+            player.printStatus();
         } else if (choice == 3) {
-            if (player.getSupplies() >= 2 || player.getCurrencyAmount("Gold") >= 8) {
-                if (player.getSupplies() >= 2 && player.getCurrencyAmount("Gold") < 8) {
+            if (player.getSupplies() >= 2 || player.getCurrencyAmount(nation.getCurrencies()[0]) >= 8) {
+                if (player.getSupplies() >= 2 && player.getCurrencyAmount(nation.getCurrencies()[0]) < 8) {
                     player.setSupplies(player.getSupplies() - 2);
                     System.out.println("Вы даете рыбаку припасы.");
                 } else {
-                    player.spendCurrency("Gold", 8);
-                    System.out.println("Вы даете рыбаку золото.");
+                    player.spendCurrency(nation.getCurrencies()[0], 8);
+                    System.out.println("Вы даете рыбаку " + nation.getCurrencies()[0] + ".");
                 }
                 System.out.println("Рыбак переправляет вас на лодке!");
                 player.setMorale(player.getMorale() + 15);
-                System.out.println("Припасы: " + player.getSupplies() + ", Золото: " + player.getCurrencyAmount("Gold") + ", Мораль: " + player.getMorale());
+                System.out.println("Припасы: " + player.getSupplies() + ", " + nation.getCurrencies()[0] + ": " + player.getCurrencyAmount(nation.getCurrencies()[0]) + ", Мораль: " + player.getMorale());
+                player.printStatus();
             } else {
-                System.out.println("У вас недостаточно припасов или золота. Рыбак отказывается помогать.");
+                System.out.println("У вас недостаточно припасов или " + nation.getCurrencies()[0] + ". Рыбак отказывается помогать.");
                 player.setMorale(player.getMorale() - 5);
                 System.out.println("Мораль: " + player.getMorale());
+                player.printStatus();
                 return this; // Repeat scene
             }
         } else if (choice == 4) {
             merchant.trade(player);
+            player.printStatus();
             return this; // Repeat scene after trading
         } else {
             System.out.println("Амулет светится и переносит вас через реку магическим образом!");
             player.setMorale(player.getMorale() + 20);
             System.out.println("Мораль: " + player.getMorale());
+            player.printStatus();
         }
         return new BanditsScene(player);
     }
